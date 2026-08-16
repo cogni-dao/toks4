@@ -1,4 +1,4 @@
-# node-template
+# toks4 tokenomics testing
 
 Node-at-root template for a **Cogni full-app submodule node** — the canonical single node, minted via GitHub generate-from-template and added as a git submodule at `nodes/<slug>/` in the operator monorepo (`Cogni-DAO/cogni`).
 
