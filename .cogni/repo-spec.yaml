@@ -24,6 +24,7 @@ governance:
   token_contract: "0xE48d3835c75cc81B6B831fc663B91960f4d9B94a"
   chain_id: "8453"
   base_url: "https://proposal.cognidao.org"
+  emissions_holder: "0xe4c2Aa5b17Fba37Bc59c837F993aF21FF0Ca35Ad"
 
 knowledge:
   database: "knowledge_toks4"
@@ -52,7 +53,9 @@ payments:
 
 # Token distributions — activate after verifying DAO-controlled minted inventory.
 distributions:
-  status: pending_activation
+  status: active
+  claim_contract_pattern: 1inch.cumulative-merkle-drop.v1
+  distributor_address: "0xb75d75a395BB2b1362182A9F24aD18D07A735423"
 
 # Born-reviewable default gates. When this node is minted as a single-node fork
 # (node-at-root, no `nodes:` registry) the operator's review path runs these gates
