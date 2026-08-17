@@ -64,7 +64,6 @@ export function useEpochReviewReadiness(
 
   useEffect(() => {
     if (status !== "open") return;
-
     // Candidate-only rehearsal seam: test nodes must be able to complete the
     // wallet -> publish -> claim loop without waiting for a full production
     // epoch. The server remains the approver/state authority, and this branch
@@ -73,7 +72,6 @@ export function useEpochReviewReadiness(
       setBoundaryReached(true);
       return;
     }
-
     const periodEndMs = Date.parse(periodEnd);
     if (!Number.isFinite(periodEndMs)) return;
 
