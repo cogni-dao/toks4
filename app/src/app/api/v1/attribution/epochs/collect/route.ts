@@ -18,10 +18,13 @@ import {
   CollectTriggerCooldownResponseSchema,
   CollectTriggerResponseSchema,
 } from "@cogni/node-contracts";
+import { buildEventId, hashCanonicalPayload } from "@cogni/ingestion-core";
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/app/_lib/auth/session";
 import { getContainer } from "@/bootstrap/container";
 import { wrapRouteHandlerWithLogging } from "@/bootstrap/http";
+import { getNodeId } from "@/shared/config";
+import { serverEnv } from "@/shared/env";
 import { EVENT_NAMES, logEvent } from "@/shared/observability";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +32,55 @@ export const runtime = "nodejs";
 
 const LEDGER_INGEST_SCHEDULE_ID = "governance:ledger_ingest";
 const COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+const TOKS4_NODE_ID = "72aa130b-f0ad-495a-a061-9ee1f9c9525d";
+
+async function backfillCandidateRehearsalReceipt(): Promise<void> {
+  if (
+    serverEnv().DEPLOY_ENVIRONMENT !== "candidate-a" ||
+    getNodeId() !== TOKS4_NODE_ID
+  ) {
+    return;
+  }
+
+  // Rehearsal-only recovery for the real toks4 PR #3 merge. Candidate-a does
+  // not receive production GitHub webhooks yet (task.5023), so persist the
+  // exact normalized event through the normal idempotent receipt adapter.
+  // This branch is explicitly non-mergeable and will be discarded after E2E.
+  const receiptId = buildEventId("github", "pr", "cogni-dao/toks4", 3);
+  const eventTime = new Date("2026-08-17T09:42:47.000Z");
+  const payloadHash = await hashCanonicalPayload({
+    authorId: "265189974",
+    id: receiptId,
+    eventTime: eventTime.toISOString(),
+  });
+
+  await getContainer().attributionStore.insertIngestionReceipts([
+    {
+      receiptId,
+      nodeId: TOKS4_NODE_ID,
+      source: "github",
+      eventType: "pr_merged",
+      platformUserId: "265189974",
+      platformLogin: "cogni-operator[bot]",
+      artifactUrl: "https://github.com/cogni-dao/toks4/pull/3",
+      metadata: {
+        title: "chore: merge node-template upstream",
+        baseBranch: "main",
+        mergeCommitSha: "d8a4bb55ee853a557c0d3eacea1b023df40520a2",
+        repo: "cogni-dao/toks4",
+        action: "closed",
+        additions: 758,
+        deletions: 72,
+        changedFiles: 24,
+      },
+      payloadHash,
+      producer: "task.5029-candidate-rehearsal",
+      producerVersion: "1",
+      eventTime,
+      retrievedAt: new Date(),
+    },
+  ]);
+}
 
 export const POST = wrapRouteHandlerWithLogging(
   {
@@ -68,6 +120,7 @@ export const POST = wrapRouteHandlerWithLogging(
       }
     }
 
+    await backfillCandidateRehearsalReceipt();
     await scheduleControl.triggerSchedule(LEDGER_INGEST_SCHEDULE_ID);
 
     logEvent(ctx.log, EVENT_NAMES.LEDGER_COLLECT_TRIGGERED, {
