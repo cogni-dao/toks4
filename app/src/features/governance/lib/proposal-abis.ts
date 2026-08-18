@@ -40,6 +40,42 @@ export const COGNI_SIGNAL_ABI = [
   },
 ] as const;
 
+/** Aragon TokenVoting ABI used by the generic public proposal launcher. */
+export const TOKEN_VOTING_ABI = [
+  {
+    type: "function",
+    name: "createProposal",
+    inputs: [
+      { name: "_metadata", type: "bytes", internalType: "bytes" },
+      {
+        name: "_actions",
+        type: "tuple[]",
+        internalType: "struct Action[]",
+        components: [
+          { name: "to", type: "address", internalType: "address" },
+          { name: "value", type: "uint256", internalType: "uint256" },
+          { name: "data", type: "bytes", internalType: "bytes" },
+        ],
+      },
+      {
+        name: "_allowFailureMap",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      { name: "_startDate", type: "uint64", internalType: "uint64" },
+      { name: "_endDate", type: "uint64", internalType: "uint64" },
+      {
+        name: "_voteOption",
+        type: "uint8",
+        internalType: "enum IMajorityVoting.VoteOption",
+      },
+      { name: "_tryEarlyExecution", type: "bool", internalType: "bool" },
+    ],
+    outputs: [{ name: "proposalId", type: "uint256", internalType: "uint256" }],
+    stateMutability: "nonpayable",
+  },
+] as const;
+
 /**
  * Aragon OSx DAO minimal ABI — the functions the publish surface needs:
  *   - `hasPermission` (view) — gate the two-state UI on whether the wallet has strict CAS authority.
