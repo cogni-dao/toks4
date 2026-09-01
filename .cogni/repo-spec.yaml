@@ -65,6 +65,7 @@ deployment:
         target: runner
       port: 3200
       visibility: public
+      runtime_profile: cogni-node-app-v1
       bindings:
         ECHO_SIDECAR_URL: echo-sidecar
       secret_refs:

@@ -18,7 +18,12 @@ const payload = JSON.stringify({
 });
 
 const server = createServer((request, response) => {
-  const status = request.url === "/" || request.url === "/livez" ? 200 : 404;
+  const status =
+    request.url === "/" ||
+    request.url === "/livez" ||
+    request.url === "/readyz"
+      ? 200
+      : 404;
   response.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
     "content-length": Buffer.byteLength(payload),

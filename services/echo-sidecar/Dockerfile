@@ -14,6 +14,6 @@ USER node
 EXPOSE 9100
 
 HEALTHCHECK --interval=10s --timeout=3s --start-period=3s --retries=3 \
-  CMD wget -qO- http://127.0.0.1:9100/livez >/dev/null || exit 1
+  CMD wget -qO- http://127.0.0.1:9100/readyz >/dev/null || exit 1
 
 CMD ["node", "server.mjs"]

@@ -46,7 +46,7 @@ Pure parsing and typed extraction for `.cogni/repo-spec.yaml` — the governance
   - `extractLedgerApprovers(spec)` — Lowercased EVM approver addresses
   - `extractKnowledgeConfig(spec)` — Node-local knowledge DB + Cogni-owned DoltHub mirror declaration
   - `extractNodeId(spec)` — Node identity UUID
-  - `extractNodeServices(spec)` — Provider-neutral app service graph with legacy one-app default
+  - `extractNodeServices(spec)` — Provider-neutral app service graph with legacy one-app default; explicit `runtime_profile: cogni-node-app-v1` selects the named Cogni app compatibility policy
   - `extractNodeArtifactBuilds(spec)` — Unique declared artifact build instructions for CI
   - `buildNodeArtifactBundle(...)` / `resolveNodeArtifactBundle(...)` — Atomic immutable source-SHA service bundle
   - `extractNodes(spec)` — Node registry entries (operator-only, returns `[]` for non-operator specs)
