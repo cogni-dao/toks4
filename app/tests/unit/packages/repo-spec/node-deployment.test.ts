@@ -10,7 +10,6 @@ const APP = {
   artifact: { name: "app" },
   port: 3200,
   visibility: "public",
-  readiness_probe: { http_get: { path: "/readyz" } },
   resources: { cpu_units: 1, memory_mi: 2048, storage_mi: 4096 },
 } as const;
 
@@ -29,7 +28,6 @@ describe("node deployment repo-spec", () => {
         visibility: "public",
         bindings: {},
         secretRefs: [],
-        readinessPath: "/readyz",
         bindHost: "0.0.0.0",
         internalUrl: "http://app:3200",
         resources: { cpuUnits: 2, memoryMi: 2048, storageMi: 4096 },
@@ -123,68 +121,6 @@ describe("node deployment repo-spec", () => {
     expect(services[0]?.secretRefs).toEqual([{ key: "APP_TOKEN" }]);
   });
 
-  it("requires and extracts public HTTP readiness", () => {
-    const services = extractNodeServices(
-      buildTestRepoSpec({
-        deployment: {
-          services: [
-            {
-              ...APP,
-              readiness_probe: {
-                http_get: { path: "/deployment-proof" },
-              },
-            },
-          ],
-        },
-      })
-    );
-    expect(services[0]?.readinessPath).toBe("/deployment-proof");
-
-    const { readiness_probe: _readiness, ...appWithoutReadiness } = APP;
-    expect(() =>
-      buildTestRepoSpec({ deployment: { services: [appWithoutReadiness] } })
-    ).toThrow(/public service must declare readiness_probe/);
-  });
-
-  it("rejects private or unsafe readiness declarations", () => {
-    expect(() =>
-      buildTestRepoSpec({
-        deployment: {
-          services: [
-            APP,
-            {
-              name: "worker",
-              artifact: { name: "worker" },
-              port: 9100,
-              visibility: "private",
-              readiness_probe: { http_get: { path: "/livez" } },
-              resources: {
-                cpu_units: 0.5,
-                memory_mi: 1024,
-                storage_mi: 2048,
-              },
-            },
-          ],
-        },
-      })
-    ).toThrow(/public HTTP readiness only in v0/);
-
-    for (const path of [
-      "health",
-      "/health?query",
-      "/health//nested",
-      "/%2e%2e/secret",
-    ]) {
-      expect(() =>
-        buildTestRepoSpec({
-          deployment: {
-            services: [{ ...APP, readiness_probe: { http_get: { path } } }],
-          },
-        })
-      ).toThrow(/Invalid repo-spec structure/);
-    }
-  });
-
   it.each([
     {
       name: "missing binding target",
@@ -254,7 +190,6 @@ describe("node deployment repo-spec", () => {
   });
 
   it("rejects persistent-state fields structurally, not service names", () => {
-    const { readiness_probe: _readiness, ...privateService } = APP;
     expect(() =>
       parseRepoSpec({
         node_id: "00000000-0000-4000-8000-000000000001",
@@ -270,10 +205,7 @@ describe("node deployment repo-spec", () => {
         node_id: "00000000-0000-4000-8000-000000000001",
         governance: {},
         deployment: {
-          services: [
-            APP,
-            { ...privateService, name: "redis", visibility: "private" },
-          ],
+          services: [APP, { ...APP, name: "redis", visibility: "private" }],
         },
       })
     ).not.toThrow();
