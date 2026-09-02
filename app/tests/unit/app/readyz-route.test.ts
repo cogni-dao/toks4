@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   assertTemporalConnectivity: vi.fn(),
   assertSchedulerWorkerConnectivity: vi.fn(),
   checkEvmRpcConnectivity: vi.fn(),
+  assertRequiredPrivateServices: vi.fn(),
   setBuildInfo: vi.fn(),
   log: {
     error: vi.fn(),
@@ -57,6 +58,10 @@ vi.mock("@/shared/env/invariants", async (importOriginal) => {
   };
 });
 
+vi.mock("@/shared/readiness/required-private-services", () => ({
+  assertRequiredPrivateServices: mocks.assertRequiredPrivateServices,
+}));
+
 vi.mock("@/shared/observability/server/metrics", () => ({
   setBuildInfo: mocks.setBuildInfo,
 }));
@@ -83,6 +88,7 @@ describe("GET /readyz async substrate semantics", () => {
     });
     mocks.assertTemporalConnectivity.mockResolvedValue(undefined);
     mocks.assertSchedulerWorkerConnectivity.mockResolvedValue(undefined);
+    mocks.assertRequiredPrivateServices.mockResolvedValue(undefined);
     mocks.verifySystemTenant.mockResolvedValue(undefined);
   });
 
@@ -106,6 +112,23 @@ describe("GET /readyz async substrate semantics", () => {
       },
     },
   ];
+
+  // The required private sibling shares this deployment unit, so unlike the
+  // remote shared substrate above it is FATAL to the ordinary probe — that is
+  // what lets plain /readyz stand in as the private-networking deploy gate.
+  it("fails shallow readiness when a required private sibling is unreachable", async () => {
+    mocks.assertRequiredPrivateServices.mockRejectedValue(
+      new InfraConnectivityError("echo-sidecar unreachable")
+    );
+
+    const response = await GET(new NextRequest("http://localhost:3000/readyz"));
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toMatchObject({
+      status: "error",
+      reason: "INFRA_UNREACHABLE",
+    });
+  });
 
   it.each(substrateFailures)(
     "keeps shallow readiness healthy when $dependency is absent",

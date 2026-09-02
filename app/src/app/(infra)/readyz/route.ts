@@ -32,6 +32,7 @@ import {
 } from "@/shared/env/invariants";
 import type { RequestContext } from "@/shared/observability";
 import { setBuildInfo } from "@/shared/observability/server/metrics";
+import { assertRequiredPrivateServices } from "@/shared/readiness/required-private-services";
 
 export const dynamic = "force-dynamic";
 
@@ -147,6 +148,12 @@ export const GET = wrapRouteHandlerWithLogging(
 
       // MVP readiness: Validate env + runtime secrets + EVM RPC + Temporal connectivity
       assertRuntimeSecrets(env);
+
+      // Required private siblings declared in this node's own service bundle.
+      // FATAL by design: they share this deployment unit, so an unreachable
+      // sibling means this instance cannot serve — that is local readiness, not
+      // the remote shared substrate the probes below deliberately tolerate.
+      await assertRequiredPrivateServices();
 
       // EVM RPC: required-config is fatal (missing URL = misconfig), but live
       // connectivity is non-fatal. K8s probes /readyz every 5s on every pod;
