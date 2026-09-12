@@ -14,7 +14,7 @@
 import type { ReactElement } from "react";
 
 import { getServerSessionUser } from "@/lib/auth/server";
-import { getLedgerApprovers, getNodeId } from "@/shared/config";
+import { getLedgerApprovers } from "@/shared/config";
 
 import { CurrentEpochView } from "./view";
 
@@ -26,9 +26,6 @@ export default async function CurrentEpochPage(): Promise<ReactElement> {
     walletAddress !== null && approvers.includes(walletAddress);
 
   return (
-    <CurrentEpochView
-      isCurrentApprover={isCurrentApprover}
-      operatorSetupUrl={`https://cognidao.org/nodes/${getNodeId()}`}
-    />
+    <CurrentEpochView isCurrentApprover={isCurrentApprover} />
   );
 }

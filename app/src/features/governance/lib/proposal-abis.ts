@@ -17,7 +17,7 @@ import { encodeFunctionData, keccak256, toBytes } from "viem";
  * Aragon OSx permission id for the DAO's `execute` entrypoint:
  * `keccak256("EXECUTE_PERMISSION")`. A wallet holding this on the DAO (where=DAO,
  * who=wallet) may call `DAO.execute(...)` directly — the standing authority the
- * operator grants during one-time setup, so per-epoch publishing needs no vote.
+ * ONE-TIME authorize grants, so per-epoch publishing needs no vote.
  */
 export const EXECUTE_PERMISSION_ID = keccak256(
   toBytes("EXECUTE_PERMISSION")
@@ -40,7 +40,6 @@ export const COGNI_SIGNAL_ABI = [
   },
 ] as const;
 
-/** Aragon TokenVoting proposal creation used by the public merge-proposal flow. */
 export const TOKEN_VOTING_ABI = [
   {
     type: "function",
@@ -78,9 +77,11 @@ export const TOKEN_VOTING_ABI = [
 
 /**
  * Aragon OSx DAO minimal ABI — the functions the publish surface needs:
- *   - `hasPermission` (view) — gate the two-state UI on whether the wallet has strict CAS authority.
- *   - `revoke` / `grantWithCondition` — the node-local distribution setup flow atomically replaces
- *     any prior grant with a condition-scoped grant through a governance proposal.
+ *   - `hasPermission`      (view) — gate the two-state UI on whether the wallet is authorized.
+ *   - `grantWithCondition` (nonpayable) — the ONE-TIME SCOPED authorize action (wrapped in a
+ *     createProposal so the DAO grants EXECUTE_PERMISSION on itself to the executor, bound to a
+ *     DistributionPublishCondition so the grant only permits the publish action set).
+ *   - `revoke`             (nonpayable) — removes a legacy shape-only grant before V2 regrant.
  *   - `execute`            (nonpayable) — the PER-EPOCH direct publish, callable once the wallet
  *     holds EXECUTE_PERMISSION; runs [mint, setMerkleRoot] atomically as msg.sender=DAO.
  * Source: Aragon OSx v1.3 `DAO.sol` (IDAO). Kept minimal — reads/writes only what publish uses.
@@ -110,6 +111,8 @@ export const DAO_ABI = [
     outputs: [],
   },
   {
+    // SCOPED authorize: bind the executor's EXECUTE_PERMISSION to a condition contract so
+    // the grant only permits the publish action set. Executes AS the DAO inside the proposal.
     type: "function",
     name: "grantWithCondition",
     stateMutability: "nonpayable",
@@ -208,9 +211,13 @@ export function buildPublishProbeData(
   });
 }
 
-export type PublishPermissionState = "authorized" | "none" | "loading";
+export type PublishPermissionState =
+  | "cas_v2"
+  | "legacy_or_unscoped"
+  | "none"
+  | "loading";
 
-/** Only strict compare-and-swap authority passes; every other permission shape fails closed. */
+/** Paired probes distinguish strict V2 from legacy or unconditional authority. */
 export function classifyPublishPermission(
   validProbe: boolean | undefined,
   invalidFailureProbe: boolean | undefined
@@ -218,11 +225,12 @@ export function classifyPublishPermission(
   if (validProbe === undefined || invalidFailureProbe === undefined) {
     return "loading";
   }
-  if (validProbe && !invalidFailureProbe) return "authorized";
+  if (validProbe && !invalidFailureProbe) return "cas_v2";
+  if (validProbe && invalidFailureProbe) return "legacy_or_unscoped";
   return "none";
 }
 
-/** Build the node-local setup proposal: revoke any prior authority, then grant the scoped condition. */
+/** Build the atomic migration proposal: revoke legacy/unset authority, then grant CAS V2. */
 export function buildPublishAuthorizationProposalArgs(
   dao: `0x${string}`,
   wallet: `0x${string}`,
@@ -240,15 +248,15 @@ export function buildPublishAuthorizationProposalArgs(
   });
 
   return [
-    "0x",
+    "0x", // _metadata
     [
       { to: dao, value: 0n, data: revokeData },
       { to: dao, value: 0n, data: grantData },
     ],
-    0n,
-    0n,
-    0n,
-    2,
-    true,
+    0n, // _allowFailureMap: revoke + grant are atomic
+    0n, // _startDate (0 ⇒ plugin derives)
+    0n, // _endDate (0 ⇒ plugin derives)
+    2, // _voteOption: IMajorityVoting.VoteOption.Yes
+    true, // _tryEarlyExecution
   ] as const;
 }

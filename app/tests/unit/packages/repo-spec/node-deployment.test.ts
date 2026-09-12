@@ -26,6 +26,7 @@ describe("node deployment repo-spec", () => {
         },
         port: 3200,
         visibility: "public",
+        runtimeProfile: "cogni-node-app-v1",
         bindings: {},
         secretRefs: [],
         bindHost: "0.0.0.0",
@@ -166,6 +167,16 @@ describe("node deployment repo-spec", () => {
     {
       name: "loopback bind",
       services: [{ ...APP, bind_host: "127.0.0.1" }],
+      message: /Invalid repo-spec structure/,
+    },
+    {
+      name: "more than 32 args",
+      services: [{ ...APP, args: Array.from({ length: 33 }, () => "arg") }],
+      message: /Invalid repo-spec structure/,
+    },
+    {
+      name: "arg longer than 1024 characters",
+      services: [{ ...APP, args: ["a".repeat(1025)] }],
       message: /Invalid repo-spec structure/,
     },
     {

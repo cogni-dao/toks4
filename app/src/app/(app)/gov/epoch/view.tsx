@@ -172,10 +172,8 @@ function CurrentEpochSection({
 
 function PastEpochsSection({
   epochs,
-  operatorSetupUrl,
 }: {
   readonly epochs: readonly EpochView[];
-  readonly operatorSetupUrl: string;
 }): ReactElement {
   if (epochs.length === 0) {
     return (
@@ -224,10 +222,7 @@ function PastEpochsSection({
                         self-gates on manifest + distributor via the authed route, so
                         it quietly shows "not ready" until R3 has recorded them. */}
                     {epoch.status === "finalized" && (
-                      <ExecuteDistributionPanel
-                        epochId={epoch.id}
-                        operatorSetupUrl={operatorSetupUrl}
-                      />
+                      <ExecuteDistributionPanel epochId={epoch.id} />
                     )}
                   </div>
                 }
@@ -260,10 +255,8 @@ function PastEpochsSection({
 
 export function CurrentEpochView({
   isCurrentApprover,
-  operatorSetupUrl,
 }: {
   readonly isCurrentApprover: boolean;
-  readonly operatorSetupUrl: string;
 }): ReactElement {
   const { data, isLoading, error } = useEpochsPage();
 
@@ -321,10 +314,7 @@ export function CurrentEpochView({
               Previous epochs with signed credit distributions
             </p>
           </div>
-          <PastEpochsSection
-            epochs={data.pastEpochs}
-            operatorSetupUrl={operatorSetupUrl}
-          />
+          <PastEpochsSection epochs={data.pastEpochs} />
         </div>
       )}
     </div>

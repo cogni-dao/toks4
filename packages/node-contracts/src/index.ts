@@ -63,7 +63,6 @@ export * from "./grants.validate.internal.v1.contract";
 export * from "./graph-runs.create.internal.v1.contract";
 export * from "./graph-runs.update.internal.v1.contract";
 export * from "./graphs.run.internal.v1.contract";
-export * from "./identity.attestation.v1.contract";
 // ── HTTP (ts-rest router + OpenAPI) ─────────────────────────────────────────
 export * from "./http/openapi.v1";
 export * from "./http/router.v1";
