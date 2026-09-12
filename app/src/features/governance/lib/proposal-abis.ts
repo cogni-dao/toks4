@@ -79,6 +79,8 @@ export const TOKEN_VOTING_ABI = [
 /**
  * Aragon OSx DAO minimal ABI — the functions the publish surface needs:
  *   - `hasPermission` (view) — gate the two-state UI on whether the wallet has strict CAS authority.
+ *   - `revoke` / `grantWithCondition` — the node-local distribution setup flow atomically replaces
+ *     any prior grant with a condition-scoped grant through a governance proposal.
  *   - `execute`            (nonpayable) — the PER-EPOCH direct publish, callable once the wallet
  *     holds EXECUTE_PERMISSION; runs [mint, setMerkleRoot] atomically as msg.sender=DAO.
  * Source: Aragon OSx v1.3 `DAO.sol` (IDAO). Kept minimal — reads/writes only what publish uses.
@@ -95,6 +97,33 @@ export const DAO_ABI = [
       { name: "_data", type: "bytes", internalType: "bytes" },
     ],
     outputs: [{ name: "", type: "bool", internalType: "bool" }],
+  },
+  {
+    type: "function",
+    name: "revoke",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "_where", type: "address", internalType: "address" },
+      { name: "_who", type: "address", internalType: "address" },
+      { name: "_permissionId", type: "bytes32", internalType: "bytes32" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "grantWithCondition",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "_where", type: "address", internalType: "address" },
+      { name: "_who", type: "address", internalType: "address" },
+      { name: "_permissionId", type: "bytes32", internalType: "bytes32" },
+      {
+        name: "_condition",
+        type: "address",
+        internalType: "contract IPermissionCondition",
+      },
+    ],
+    outputs: [],
   },
   {
     type: "function",
@@ -191,4 +220,35 @@ export function classifyPublishPermission(
   }
   if (validProbe && !invalidFailureProbe) return "authorized";
   return "none";
+}
+
+/** Build the node-local setup proposal: revoke any prior authority, then grant the scoped condition. */
+export function buildPublishAuthorizationProposalArgs(
+  dao: `0x${string}`,
+  wallet: `0x${string}`,
+  condition: `0x${string}`
+) {
+  const revokeData = encodeFunctionData({
+    abi: DAO_ABI,
+    functionName: "revoke",
+    args: [dao, wallet, EXECUTE_PERMISSION_ID],
+  });
+  const grantData = encodeFunctionData({
+    abi: DAO_ABI,
+    functionName: "grantWithCondition",
+    args: [dao, wallet, EXECUTE_PERMISSION_ID, condition],
+  });
+
+  return [
+    "0x",
+    [
+      { to: dao, value: 0n, data: revokeData },
+      { to: dao, value: 0n, data: grantData },
+    ],
+    0n,
+    0n,
+    0n,
+    2,
+    true,
+  ] as const;
 }

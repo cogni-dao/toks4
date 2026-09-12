@@ -138,7 +138,6 @@ function SetupSequence({
   // (empty "0x" would make the condition deny a live grant → button falsely reappears).
   const {
     hasPermission,
-    permissionState,
     refetch: refetchPermission,
   } = useHasExecutePermission({
     daoAddress,
@@ -203,7 +202,7 @@ function SetupSequence({
         distributorAddress={distributorAddress}
         wallet={address ?? null}
         walletReady={isConnected && onCorrectChain}
-        needsCasUpgrade={permissionState === "legacy_or_unscoped"}
+        needsCasUpgrade={false}
         onAuthorized={refetchPermission}
       />
 
