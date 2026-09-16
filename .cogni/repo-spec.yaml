@@ -72,6 +72,7 @@ deployment:
         - key: AUTH_SECRET
         - key: DATABASE_URL
         - key: DATABASE_SERVICE_URL
+        - key: EVM_RPC_URL
         - key: SCHEDULER_API_TOKEN
         - key: BILLING_INGEST_TOKEN
         - key: LITELLM_VIRTUAL_KEY
