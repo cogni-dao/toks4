@@ -137,7 +137,6 @@ const LEGACY_DEFAULT_DEPLOYMENT: NodeDeploymentSpec = {
       },
       port: 3200,
       visibility: "public",
-      runtime_profile: "cogni-node-app-v1",
       bindings: {},
       secret_refs: [],
       bind_host: "0.0.0.0",
