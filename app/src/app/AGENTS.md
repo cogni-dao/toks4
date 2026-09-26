@@ -5,7 +5,7 @@
 ## Metadata
 
 - **Owners:** @derek @core-dev
-- **Last reviewed:** 2026-09-01
+- **Last reviewed:** 2026-04-27
 - **Status:** draft
 
 ## Purpose
@@ -50,7 +50,6 @@ Next.js App Router delivery layer. UI pages and API routes that expose features 
   - Public pages: `/` (homepage via `(public)/page.tsx`)
   - Protected pages: `/chat` (via `(app)/chat/page.tsx`)
   - Infra: `/health`, `/openapi.json`, `/meta/route-manifest` (via `(infra)/*`)
-  - Disposable deployment proof: `/deployment-proof` verifies the Git-declared app → private sidecar binding (task.5067; unmerged proof branch only)
   - API: `/api/auth/*`, `/api/v1/chat/completions`
   - Internal ops: `/api/internal/ops/governance/schedules/sync` [POST] (deploy-only trigger)
   - Agent discovery: `/.well-known/agent.json` [GET] — public discovery document for machine clients

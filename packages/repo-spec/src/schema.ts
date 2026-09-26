@@ -329,7 +329,7 @@ export const nodeServiceSpecSchema = z
     name: serviceNameSchema,
     artifact: nodeServiceArtifactSchema,
     command: z.array(z.string().min(1).max(1024)).min(1).max(32).optional(),
-    args: z.array(z.string().max(1024)).max(32).optional(),
+    args: z.array(z.string().max(4096)).max(64).optional(),
     port: z.number().int().min(1).max(65535),
     visibility: z.enum(["public", "private"]),
     /** Explicit non-provider compatibility selector; absent stays generic. */
@@ -415,14 +415,6 @@ export const nodeDeploymentSchema = z
     }
 
     deployment.services.forEach((service, index) => {
-      if (service.visibility === "private" && service.runtime_profile) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["services", index, "runtime_profile"],
-          message:
-            "cogni-node-app-v1 runtime_profile requires the public service",
-        });
-      }
       Object.entries(service.bindings).forEach(([envName, target]) => {
         if (target === service.name) {
           ctx.addIssue({
@@ -438,6 +430,14 @@ export const nodeDeploymentSchema = z
           });
         }
       });
+      if (service.visibility === "private" && service.runtime_profile) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["services", index, "runtime_profile"],
+          message:
+            "cogni-node-app-v1 runtime_profile requires the public service",
+        });
+      }
     });
   });
 
