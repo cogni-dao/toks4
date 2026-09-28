@@ -181,7 +181,6 @@ describe("GET epoch distribution-tx", () => {
     });
   });
 });
-
 describe("publish CAS calldata", () => {
   it("encodes the live root and distinguishes strict V2 from legacy authority", () => {
     const validData = buildPublishProbeData(TOKEN, DISTRIBUTOR, LIVE_ROOT, 0n);
