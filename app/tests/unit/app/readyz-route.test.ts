@@ -45,7 +45,6 @@ vi.mock("@/shared/env", async (importOriginal) => {
     serverEnv: mocks.serverEnv,
   };
 });
-
 vi.mock("@/shared/env/invariants", async (importOriginal) => {
   const actual =
     await importOriginal<typeof import("@/shared/env/invariants")>();
