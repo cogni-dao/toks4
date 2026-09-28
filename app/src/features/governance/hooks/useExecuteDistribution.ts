@@ -241,9 +241,7 @@ export function useHasExecutePermission(params: {
 
   return {
     hasPermission:
-      permissionState === "loading"
-        ? undefined
-        : permissionState === "authorized",
+      permissionState === "loading" ? undefined : permissionState === "cas_v2",
     permissionState,
     isLoading:
       isRootLoading || validProbe.isLoading || invalidFailureProbe.isLoading,
