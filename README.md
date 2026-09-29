@@ -61,3 +61,5 @@ The operator keeps every node aligned with `node-template` automatically (a GitH
 The Tier-3 carve-out is declared in `.cogni/sync-manifest.yaml#node_local` (data, not hardcoded), so the boundary moves with the template. Full contract: the operator knowledge entry `node-template-sync-contract`.
 
 <!-- task.5044 Phase B: CI->Akash cutover proof marker 2026-09-01 -->
+
+<!-- cicd-reliability-probe: cycle 2, 2026-09-29T22:12:43Z UTC — verifies commit → CI → preview → prod on the Crossplane-only path (task.5098 proof) -->
